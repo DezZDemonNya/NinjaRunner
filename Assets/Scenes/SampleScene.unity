@@ -311,7 +311,7 @@ MonoBehaviour:
     m_Bits: 1024
   groundDistance: 0.4
   Gravity: 30
-  InAirMulti: 0.5
+  InAirMulti: 1.5
   SlideMulti: 0
   TotalVelocity: 0
 --- !u!43 &214676338
