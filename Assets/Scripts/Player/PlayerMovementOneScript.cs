@@ -20,8 +20,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     [Tooltip("AMS = Absolute minimum Speed, the speed the player will move without any debuffs or buffs. Default = 12f")]
     public float MaxBaseSpeed = 12f;
     public float MinBaseSpeed = 6f;
-    public float Acceleration = 6f; //how fast the player will reach AMS from idle
-    public float Deceleration = 6f; //how fast the player will reach AMS from buffed speed and how fast the player will reach idle from AMS with 0 input
+    public float Acceleration = 6f; //how fast the player will reach max base speed from min base speed
+    public float Deceleration = 6f; //how fast the player will reach min base speed from buffed speed and how fast the player will reach idle from AMS with 0 input
     public float JumpHeight;
 
     [Header("INPUT")]
@@ -44,6 +44,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     [Header("Multiplyiers")]
     public float InAirMulti;
     public float SlideMulti;
+    [Header("Drag")]
+    public float InAirDrag;
     [Header("Debugging")]
     public float TotalVelocity;
     private void Start()
@@ -163,7 +165,10 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
+              CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
+            //CurrentSpeed = CurrentSpeed - InAirDrag * Time.deltaTime;
             characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
+            TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
         NextState();
