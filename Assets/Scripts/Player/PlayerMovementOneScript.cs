@@ -41,6 +41,9 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float Gravity = 30.0f;
     private Vector3 _playerVelocity = Vector3.zero;
 
+    [Header("Multiplyiers")]
+    public float InAirMulti;
+    public float SlideMulti;
     [Header("Debugging")]
     public float TotalVelocity;
     private void Start()
@@ -57,10 +60,24 @@ public class PlayerMovementOneScript : MonoBehaviour
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
         if (IsGrounded)
         {
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 _playerVelocity.y = JumpHeight;
             }
+            if (directionNormal.magnitude >= 0.01f)
+            {
+                state = State.Moving;
+            }
+            else
+            {
+                state = State.Idle;
+            }
+
+        }
+        else
+        {
+            state = State.InAir;
         }
         
 
@@ -73,15 +90,7 @@ public class PlayerMovementOneScript : MonoBehaviour
         _playerVelocity.y -= Gravity * Time.deltaTime;
         characterController.Move(_playerVelocity * Time.deltaTime);
         //============================================================================
-        if (directionNormal.magnitude >= 0.01f)
-        {
-            state = State.Moving;
-        }
-        else
-        {
-            state = State.Idle;
-        }
-
+        
         TotalVelocity = characterController.velocity.magnitude;
     }
     public void Move()
@@ -154,6 +163,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
+            characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
             yield return null;
         }
         NextState();
