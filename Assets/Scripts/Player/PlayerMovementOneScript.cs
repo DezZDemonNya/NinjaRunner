@@ -168,7 +168,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-              CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
+
+            CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
             //CurrentSpeed = CurrentSpeed - InAirDrag * Time.deltaTime;
             characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
