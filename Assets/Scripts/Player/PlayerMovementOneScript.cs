@@ -136,11 +136,12 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             if (CurrentSpeed > MinBaseSpeed)
             {
-                CurrentSpeed = CurrentSpeed - Deceleration * Time.deltaTime;
+                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
+                //CurrentSpeed = CurrentSpeed - Deceleration * Time.deltaTime;
                 characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             }
-            
-            
+
+            TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
         NextState();
@@ -153,7 +154,9 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (CurrentSpeed < MaxBaseSpeed)
             {
                 //add speed untill max is reaches
-                CurrentSpeed = CurrentSpeed + Acceleration * Time.deltaTime;
+                //CurrentSpeed = CurrentSpeed + Acceleration * Time.deltaTime;
+                CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
+
             }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
