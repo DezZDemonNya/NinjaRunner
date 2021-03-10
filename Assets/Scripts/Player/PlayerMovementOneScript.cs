@@ -23,6 +23,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float Acceleration = 6f; //how fast the player will reach max base speed from min base speed
     public float Deceleration = 6f; //how fast the player will reach min base speed from buffed speed and how fast the player will reach idle from AMS with 0 input
     public float JumpHeight;
+    public float InAirAcceleration; //this is for input movement
+    public float InAirDeceleration; //this too
 
     [Header("INPUT")]
     private Vector3 moveDirection = Vector3.zero;
