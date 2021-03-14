@@ -72,7 +72,6 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (directionNormal.magnitude >= 0.01f)
             {
                 state = State.Moving;
-                
             }
             else
             {
@@ -126,7 +125,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Moving)
         {
-            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x * 0.5f, 0f, directionNormal.z));
+            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x * 0.7f, 0f, directionNormal.z));
             if (CurrentSpeed < MaxBaseSpeed)
             {
                 //add speed untill max is reaches
@@ -142,6 +141,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
+
             CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
             characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
