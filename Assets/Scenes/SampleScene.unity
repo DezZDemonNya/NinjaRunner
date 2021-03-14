@@ -501,10 +501,13 @@ MonoBehaviour:
   characterController: {fileID: 148400797}
   CurrentSpeed: 6
   MaxBaseSpeed: 16
+  MidBaseSpeed: 0
   MinBaseSpeed: 3
   Acceleration: 4
   Deceleration: 5
   JumpHeight: 12
+  InAirAcceleration: 0
+  InAirDeceleration: 0
   GroundCheck: {fileID: 1400648154}
   IsGrounded: 0
   GroundMask:
