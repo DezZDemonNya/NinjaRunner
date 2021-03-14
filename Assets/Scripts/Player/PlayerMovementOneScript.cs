@@ -72,6 +72,7 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (directionNormal.magnitude >= 0.01f)
             {
                 state = State.Moving;
+                
             }
             else
             {
@@ -83,8 +84,6 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             state = State.InAir;
         }
-        
-
         //GRAVITY
         //=============================================================================
         if (IsGrounded && _playerVelocity.y < 0)
@@ -96,28 +95,6 @@ public class PlayerMovementOneScript : MonoBehaviour
         //============================================================================
         
         TotalVelocity = characterController.velocity.magnitude;
-    }
-    public void Move()
-    {
-
-        if (IsGrounded)
-        {
-            //if the players current speed is less than the minimum default speed
-            if (CurrentSpeed < MaxBaseSpeed)
-            {
-                //add speed untill max is reaches
-                CurrentSpeed = CurrentSpeed + Acceleration * Time.deltaTime;
-            }
-            if (CurrentSpeed > MinBaseSpeed)
-            {
-                CurrentSpeed = CurrentSpeed - Deceleration * Time.deltaTime;
-            }
-            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
-        }
-    }
-    public void Jump()
-    {
-
     }
     private void FixedUpdate()
     {
@@ -152,13 +129,17 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Moving)
         {
-            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x * 0.5f, 0f, directionNormal.z));
             if (CurrentSpeed < MaxBaseSpeed)
             {
                 //add speed untill max is reaches
                 //CurrentSpeed = CurrentSpeed + Acceleration * Time.deltaTime;
                 CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
 
+            }
+            if (directionNormal.z < 1f)
+            {
+                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
             }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
