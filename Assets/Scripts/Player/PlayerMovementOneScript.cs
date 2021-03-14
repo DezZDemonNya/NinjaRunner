@@ -100,7 +100,6 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         IsGrounded = Physics.CheckSphere(GroundCheck.position, groundDistance, GroundMask);
     }
-
     #region States
     State state;
     void NextState()
@@ -116,10 +115,8 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (CurrentSpeed > MinBaseSpeed)
             {
                 CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
-                //CurrentSpeed = CurrentSpeed - Deceleration * Time.deltaTime;
                 characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             }
-
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
@@ -133,13 +130,7 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (CurrentSpeed < MaxBaseSpeed)
             {
                 //add speed untill max is reaches
-                //CurrentSpeed = CurrentSpeed + Acceleration * Time.deltaTime;
                 CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
-
-            }
-            if (directionNormal.z < 1f)
-            {
-                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
             }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
@@ -151,9 +142,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-
             CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
-            //CurrentSpeed = CurrentSpeed - InAirDrag * Time.deltaTime;
             characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
