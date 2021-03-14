@@ -34,6 +34,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     private float horizontal;
     [Tooltip("The W-S input")]
     private float vertical;
+    public bool IsSprinting;
 
     [Header("Checks and physics")]
     public Transform GroundCheck;
@@ -51,6 +52,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float InAirDrag;
     [Header("Debugging")]
     public float TotalVelocity;
+    public float KPH;
+
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -63,9 +66,9 @@ public class PlayerMovementOneScript : MonoBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
+       
         if (IsGrounded)
         {
-
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 _playerVelocity.y = JumpHeight;
@@ -73,6 +76,7 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (directionNormal.magnitude >= 0.01f)
             {
                 state = State.Moving;
+                
             }
             else
             {
@@ -127,11 +131,16 @@ public class PlayerMovementOneScript : MonoBehaviour
         while (state == State.Moving)
         {
             moveDirection = transform.TransformDirection(new Vector3(directionNormal.x * 0.7f, 0f, directionNormal.z));
-            if (CurrentSpeed < MaxBaseSpeed)
-            {
-                //add speed untill max is reaches
-                CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
-            }
+           
+                if (CurrentSpeed < MidBaseSpeed)
+                {
+                    //add speed untill max is reaches
+                    CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
+                }
+            
+           
+            
+
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
