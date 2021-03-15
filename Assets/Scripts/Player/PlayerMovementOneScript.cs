@@ -7,6 +7,7 @@ public enum State
 {
     Idle,
     Moving,
+    Sprinting,
     InAir,
     WallRunning
 }
@@ -66,6 +67,10 @@ public class PlayerMovementOneScript : MonoBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            IsSprinting = !IsSprinting;
+        }
        
         if (IsGrounded)
         {
@@ -75,7 +80,15 @@ public class PlayerMovementOneScript : MonoBehaviour
             }
             if (directionNormal.magnitude >= 0.01f)
             {
-                state = State.Moving;
+                if (directionNormal.z > 0.5f && IsSprinting)
+                {
+                    state = State.Sprinting;
+                }
+                else
+                {
+                    state = State.Moving;
+                }
+               
                 
             }
             else
@@ -116,6 +129,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
+            IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
                 CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
@@ -130,17 +144,32 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Moving)
         {
-            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x * 0.7f, 0f, directionNormal.z));
-           
-                if (CurrentSpeed < MidBaseSpeed)
-                {
-                    //add speed untill max is reaches
-                    CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
-                }
-            
-           
-            
-
+            IsSprinting = false;
+            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            if (CurrentSpeed < MidBaseSpeed)
+            {
+                //add speed untill max is reaches
+                CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
+            }
+            else if (CurrentSpeed > MidBaseSpeed)
+            {
+                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
+            }
+            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
+            TotalVelocity = characterController.velocity.magnitude;
+            yield return null;
+        }
+        NextState();
+    }
+    private IEnumerator SprintingState()
+    {
+        while (state == State.Sprinting)
+        {
+            moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            if (CurrentSpeed < MaxBaseSpeed)
+            {
+                CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
+            }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
