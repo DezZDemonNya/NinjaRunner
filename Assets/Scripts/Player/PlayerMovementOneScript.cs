@@ -33,6 +33,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 directionNormal;
     private Vector3 InAirMove = Vector3.zero;
+    private Vector3 desiredVector;
     [Tooltip("The A-D input")]
     private float horizontal;
     [Tooltip("The W-S input")]
@@ -188,11 +189,26 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-            //the idea is that the 
-            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
-            moveDirection = InAirMove += moveDirection * (1f - Time.deltaTime * InAirControl);
-            CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
-            characterController.Move(moveDirection * CurrentSpeed * InAirControl * Time.deltaTime);
+            //lerp attempt
+            // float t = 0.0f;
+            // Vector3 desiredVector = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            // InAirMove = transform.TransformDirection(new Vector3(Mathf.Lerp(moveDirection.x, desiredVector.x, t), 0f, Mathf.Lerp(moveDirection.z, desiredVector.z, t)));
+            // t += 0.5f * Time.deltaTime;
+            // if (t > 1.0f)
+            //  {
+            //     Vector3 temp = desiredVector;
+            //     desiredVector = moveDirection;
+            //     moveDirection = temp;
+            //     t = 0.0f;
+            // }
+            //SmoothDamp Attempt
+            float smoothTime = 0.01f;
+            Vector3 velocity = Vector3.zero;
+            desiredVector = transform.TransformDirection(new Vector3(horizontal, 0f, vertical)) * InAirControl;
+            InAirMove = transform.TransformDirection(Vector3.SmoothDamp(moveDirection, desiredVector, ref velocity, smoothTime));
+            //CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
+
+            characterController.Move(InAirMove * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
