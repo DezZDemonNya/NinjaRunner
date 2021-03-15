@@ -189,26 +189,19 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-            //lerp attempt
-            // float t = 0.0f;
-            // Vector3 desiredVector = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
-            // InAirMove = transform.TransformDirection(new Vector3(Mathf.Lerp(moveDirection.x, desiredVector.x, t), 0f, Mathf.Lerp(moveDirection.z, desiredVector.z, t)));
-            // t += 0.5f * Time.deltaTime;
-            // if (t > 1.0f)
-            //  {
-            //     Vector3 temp = desiredVector;
-            //     desiredVector = moveDirection;
-            //     moveDirection = temp;
-            //     t = 0.0f;
-            // }
-            //SmoothDamp Attempt
-            float smoothTime = 0.01f;
-            Vector3 velocity = Vector3.zero;
-            desiredVector = transform.TransformDirection(new Vector3(horizontal, 0f, vertical)) * InAirControl;
-            InAirMove = transform.TransformDirection(Vector3.SmoothDamp(moveDirection, desiredVector, ref velocity, smoothTime));
-            //CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
-
-            characterController.Move(InAirMove * CurrentSpeed * Time.deltaTime);
+            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            
+            if (horizontal != 0f)
+            {
+                moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
+                //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
+            }
+            if (vertical != 0f)
+            {
+                moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
+                //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+            }
+            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
