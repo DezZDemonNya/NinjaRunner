@@ -505,10 +505,10 @@ MonoBehaviour:
   MinBaseSpeed: 4
   Acceleration: 4
   Deceleration: 5
-  JumpHeight: 16
+  JumpHeight: 10
   InAirAcceleration: 0
   InAirDeceleration: 0
-  InAirControl: 2
+  InAirControl: 1
   IsSprinting: 0
   GroundCheck: {fileID: 1400648154}
   IsGrounded: 0
@@ -519,7 +519,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   groundDistance: 0.4
-  Gravity: 30
+  Gravity: 20
   InAirMulti: 1.5
   SlideMulti: 0
   InAirDrag: 0.2

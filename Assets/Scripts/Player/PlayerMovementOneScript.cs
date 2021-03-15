@@ -49,6 +49,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float groundDistance = 0.4f;
     public float Gravity = 30.0f;
     private Vector3 _playerVelocity = Vector3.zero;
+    public bool CanDash;
 
     [Header("Multiplyiers")]
     public float InAirMulti;
@@ -133,7 +134,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
-            
+            CanDash = true;
             IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
@@ -191,23 +192,27 @@ public class PlayerMovementOneScript : MonoBehaviour
         while (state == State.InAir)
         {
             InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
-            
-            if (horizontal != 0f)
+
+            if (!CanDash)
             {
-                moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
-                //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
+                if (horizontal != 0f)
+                {
+                    moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
+                    //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
+                }
+                if (vertical != 0f)
+                {
+                    moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
+                    //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+                }
             }
-            if (vertical != 0f)
+            else
             {
-                moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
-                //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+                //dash
+                CanDash = false;
+                // the other half is in idle state
             }
-            if (CurrentSpeed > MinBaseSpeed)
-            {
-                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
-            }
-            
-            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
+            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  //maybe put this ^ here? nahhhhhhhhhh
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
