@@ -142,6 +142,7 @@ public class PlayerMovementOneScript : MonoBehaviour
             }
             else
             {
+                CurrentSpeed = MinBaseSpeed;
                 moveDirection = Vector3.zero;
             }
             TotalVelocity = characterController.velocity.magnitude;
@@ -201,6 +202,11 @@ public class PlayerMovementOneScript : MonoBehaviour
                 moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
                 //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
             }
+            if (CurrentSpeed > MinBaseSpeed)
+            {
+                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
+            }
+            
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
