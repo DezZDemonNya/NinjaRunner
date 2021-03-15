@@ -16,9 +16,9 @@ public class PlayerMovementOneScript : MonoBehaviour
 {
     [SerializeField] private CharacterController characterController;
 
+    [Tooltip("Note that all speeds are in meters per second")]
     [Header("Speeds")]
     public float CurrentSpeed = 6f; //How fast the player is currently moving
-    [Tooltip("AMS = Absolute minimum Speed, the speed the player will move without any debuffs or buffs. Default = 12f")]
     public float MaxBaseSpeed = 16f;
     public float MidBaseSpeed;
     public float MinBaseSpeed = 3f;
@@ -28,6 +28,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float InAirAcceleration; //this is for input movement
     public float InAirDeceleration; //this too
 
+
     [Header("INPUT")]
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 directionNormal;
@@ -35,6 +36,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     private float horizontal;
     [Tooltip("The W-S input")]
     private float vertical;
+    public float InAirControl;
     public bool IsSprinting;
 
     [Header("Checks and physics")]
@@ -180,7 +182,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-
+            
             CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
             characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;

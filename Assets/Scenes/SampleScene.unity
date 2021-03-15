@@ -505,9 +505,10 @@ MonoBehaviour:
   MinBaseSpeed: 4
   Acceleration: 4
   Deceleration: 5
-  JumpHeight: 12
+  JumpHeight: 10
   InAirAcceleration: 0
   InAirDeceleration: 0
+  InAirControl: 0
   IsSprinting: 0
   GroundCheck: {fileID: 1400648154}
   IsGrounded: 0
@@ -521,7 +522,7 @@ MonoBehaviour:
   Gravity: 30
   InAirMulti: 1.5
   SlideMulti: 0
-  InAirDrag: 0.5
+  InAirDrag: 0.2
   TotalVelocity: 0
   KPH: 0
 --- !u!1 &160948464
@@ -3854,7 +3855,7 @@ GameObject:
   - component: {fileID: 1307983405}
   - component: {fileID: 1307983404}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: 15m
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
