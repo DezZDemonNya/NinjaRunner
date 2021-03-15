@@ -508,7 +508,7 @@ MonoBehaviour:
   JumpHeight: 10
   InAirAcceleration: 0
   InAirDeceleration: 0
-  InAirControl: 0
+  InAirControl: 0.2
   IsSprinting: 0
   GroundCheck: {fileID: 1400648154}
   IsGrounded: 0

@@ -32,6 +32,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     [Header("INPUT")]
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 directionNormal;
+    private Vector3 InAirMove = Vector3.zero;
     [Tooltip("The A-D input")]
     private float horizontal;
     [Tooltip("The W-S input")]
@@ -131,11 +132,16 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
+            
             IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
                 CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
                 characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
+            }
+            else
+            {
+                moveDirection = Vector3.zero;
             }
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
@@ -182,9 +188,11 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-            
+            //the idea is that the 
+            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            moveDirection = InAirMove += moveDirection * (1f - Time.deltaTime * InAirControl);
             CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDrag);
-            characterController.Move(moveDirection * CurrentSpeed * InAirMulti * Time.deltaTime);
+            characterController.Move(moveDirection * CurrentSpeed * InAirControl * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
