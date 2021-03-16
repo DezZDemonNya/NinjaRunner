@@ -508,7 +508,7 @@ MonoBehaviour:
   JumpHeight: 10
   InAirAcceleration: 0
   InAirDeceleration: 0
-  AirControllBuffer: 1.1
+  AirControllBuffer: 1
   InAirControl: 2
   IsSprinting: 0
   GroundCheck: {fileID: 1400648154}
@@ -524,10 +524,14 @@ MonoBehaviour:
   CanDash: 0
   InAirMulti: 1.5
   SlideMulti: 0
-  InAirDrag: 0.2
+  InAirDrag: 1
   TotalVelocity: 0
   KPH: 0
   IsControllingAir: 0
+  MoveDirectionMagnitude: 0
+  DirectionNormalMagnitude: 0
+  InAirMoveMagnitude: 0
+  MaxAirVelocityMagnitude: 0
 --- !u!1 &160948464
 GameObject:
   m_ObjectHideFlags: 0

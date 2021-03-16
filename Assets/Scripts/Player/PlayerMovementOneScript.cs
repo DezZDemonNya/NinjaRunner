@@ -205,26 +205,16 @@ public class PlayerMovementOneScript : MonoBehaviour
         while (state == State.InAir)
         {
             InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            
 
             if (!CanDash)
             {
                 if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
                 {
-                    if (horizontal != 0f)
+                    if (directionNormal.magnitude != 0f)
                     {
-                        moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
+                        moveDirection += InAirMove * InAirControl * Time.deltaTime;
                         IsControllingAir = true;
-                        //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
-                    }
-                    else
-                    {
-                        IsControllingAir = false;
-                    }
-                    if (vertical != 0f)
-                    {
-                        moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
-                        IsControllingAir = true;
-                        //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
                     }
                     else
                     {
@@ -232,22 +222,11 @@ public class PlayerMovementOneScript : MonoBehaviour
                     }
 
                 }
-                /*
-                if (Mathf.Abs(moveDirection.z) <= MaxAirVelocity.z)
+                else
                 {
-                    if (vertical != 0f)
-                    {
-                        moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
-                        IsControllingAir = true;
-                        //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
-                    }
-                    else
-                    {
-                        IsControllingAir = false;
-                    }
+                    
+                    // Debug.LogError("BRUH");
                 }
-                */
-
             }
             else
             {
