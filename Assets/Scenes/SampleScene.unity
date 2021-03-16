@@ -502,11 +502,10 @@ MonoBehaviour:
   CurrentSpeed: 6
   MaxBaseSpeed: 7
   MidBaseSpeed: 5
-  MinBaseSpeed: 4
+  MinBaseSpeed: 2
   Acceleration: 4
   Deceleration: 5
   JumpHeight: 11
-  InAirAcceleration: 0
   InAirDeceleration: 0
   AirControllBuffer: 0.3
   InAirControl: 5
@@ -521,6 +520,7 @@ MonoBehaviour:
     m_Bits: 1024
   groundDistance: 0.4
   Gravity: 25
+  WallGravity: 10
   CanDash: 0
   TotalVelocity: 0
   KPH: 0
