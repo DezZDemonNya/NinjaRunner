@@ -203,18 +203,28 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
-            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
+            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x * InAirControl, 0f, directionNormal.z * InAirControl));
             if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
             {
                 if (directionNormal.magnitude != 0f)
                 {
-                    moveDirection = InAirMove * (1f + Time.deltaTime * InAirControl);
-                   // moveDirection += InAirMove * InAirControl * Time.deltaTime;
-                    IsControllingAir = true;
+                    //moveDirection = moveDirection * (1f + Time.deltaTime * CurrentSpeed);
+                    moveDirection += InAirMove * Time.deltaTime;
                 }
-                
             }
-
+            else if (Mathf.Abs(moveDirection.magnitude) < 1.32f)
+            {
+                if (directionNormal.magnitude != 0f)
+                {
+                    //moveDirection = moveDirection * (1f + Time.deltaTime * CurrentSpeed);
+                    moveDirection -= InAirMove * Time.deltaTime;
+                }
+            }
+            else
+            {
+                moveDirection = moveDirection / 2f;
+            }
+            CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * InAirDeceleration);
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;

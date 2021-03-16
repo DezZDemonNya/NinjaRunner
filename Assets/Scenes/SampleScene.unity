@@ -505,11 +505,11 @@ MonoBehaviour:
   MinBaseSpeed: 4
   Acceleration: 4
   Deceleration: 5
-  JumpHeight: 10
+  JumpHeight: 11
   InAirAcceleration: 0
   InAirDeceleration: 0
-  AirControllBuffer: 1
-  InAirControl: 2
+  AirControllBuffer: 0.3
+  InAirControl: 5
   IsSprinting: 0
   GroundCheck: {fileID: 1400648154}
   IsGrounded: 0
@@ -520,11 +520,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   groundDistance: 0.4
-  Gravity: 20
+  Gravity: 25
   CanDash: 0
-  DashSpeed: 1
-  SlideMulti: 0
-  InAirDrag: 1
   TotalVelocity: 0
   KPH: 0
   IsControllingAir: 0
