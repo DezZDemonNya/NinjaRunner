@@ -27,13 +27,13 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float JumpHeight;
     public float InAirAcceleration; //this is for input movement
     public float InAirDeceleration; //this too
-
+    public float AirControllBuffer;
 
     [Header("INPUT")]
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 directionNormal;
     private Vector3 InAirMove = Vector3.zero;
-    private Vector3 desiredVector;
+    private Vector3 MaxAirVelocity;
     [Tooltip("The A-D input")]
     private float horizontal;
     [Tooltip("The W-S input")]
@@ -59,6 +59,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     [Header("Debugging")]
     public float TotalVelocity;
     public float KPH;
+    public bool IsControllingAir;
 
     private void Start()
     {
@@ -79,6 +80,9 @@ public class PlayerMovementOneScript : MonoBehaviour
        
         if (IsGrounded)
         {
+            //MaxAirVelocity = new Vector3(moveDirection.x + AirControllBuffer, 0f, moveDirection.z + AirControllBuffer);
+            MaxAirVelocity = moveDirection * AirControllBuffer;
+            IsControllingAir = false;
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 _playerVelocity.y = JumpHeight;
@@ -134,7 +138,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
-            CanDash = true;
+            //CanDash = true;
             IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
@@ -195,21 +199,40 @@ public class PlayerMovementOneScript : MonoBehaviour
 
             if (!CanDash)
             {
-                if (horizontal != 0f)
+                if (moveDirection.x <= MaxAirVelocity.x)
                 {
-                    moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
-                    //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
+                    if (horizontal != 0f)
+                    {
+                        moveDirection.x += InAirMove.x * InAirControl * Time.deltaTime;
+                        IsControllingAir = true;
+                        //moveDirection.x = InAirMove.x * (1f + Time.deltaTime * InAirControl);
+                    }
+                    else
+                    {
+                        IsControllingAir = false;
+                    }
+
                 }
-                if (vertical != 0f)
+                
+                if (moveDirection.z <= MaxAirVelocity.z)
                 {
-                    moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
-                    //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+                    if (vertical != 0f)
+                    {
+                        moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
+                        IsControllingAir = true;
+                        //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+                    }
+                    else
+                    {
+                        IsControllingAir = false;
+                    }
                 }
+                
             }
             else
             {
                 //dash
-                CanDash = false;
+                //CanDash = false;
                 // the other half is in idle state
             }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  //maybe put this ^ here? nahhhhhhhhhh
