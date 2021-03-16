@@ -52,11 +52,6 @@ public class PlayerMovementOneScript : MonoBehaviour
     private Vector3 _playerVelocity = Vector3.zero;
     public bool CanDash;
 
-    [Header("Multiplyiers")]
-    public float DashSpeed;
-    public float SlideMulti;
-    [Header("Drag")]
-    public float InAirDrag;
     [Header("Debugging")]
     public float TotalVelocity;
     public float KPH;
@@ -209,21 +204,17 @@ public class PlayerMovementOneScript : MonoBehaviour
         while (state == State.InAir)
         {
             InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
-            if (!CanDash)
+            if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
             {
-                if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
+                if (directionNormal.magnitude != 0f)
                 {
-                    if (directionNormal.magnitude != 0f)
-                    {
-                        moveDirection += InAirMove * InAirControl * Time.deltaTime;
-                        IsControllingAir = true;
-                    }
+                    moveDirection = InAirMove * (1f + Time.deltaTime * InAirControl);
+                   // moveDirection += InAirMove * InAirControl * Time.deltaTime;
+                    IsControllingAir = true;
                 }
+                
             }
-            else
-            {
-               
-            }
+
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
