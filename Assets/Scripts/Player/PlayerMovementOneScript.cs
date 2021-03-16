@@ -61,6 +61,11 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float KPH;
     public bool IsControllingAir;
 
+    public float MoveDirectionMagnitude;
+    public float DirectionNormalMagnitude;
+    public float InAirMoveMagnitude;
+    public float MaxAirVelocityMagnitude;
+
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -70,6 +75,10 @@ public class PlayerMovementOneScript : MonoBehaviour
     }
     private void Update()
     {
+        MoveDirectionMagnitude = moveDirection.magnitude;
+        DirectionNormalMagnitude = directionNormal.magnitude;
+        InAirMoveMagnitude = InAirMove.magnitude;
+        MaxAirVelocityMagnitude = MaxAirVelocity.magnitude;
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
@@ -80,8 +89,8 @@ public class PlayerMovementOneScript : MonoBehaviour
        
         if (IsGrounded)
         {
-            //MaxAirVelocity = new Vector3(moveDirection.x + AirControllBuffer, 0f, moveDirection.z + AirControllBuffer);
-            MaxAirVelocity = moveDirection * AirControllBuffer;
+           // MaxAirVelocity = new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer);
+            MaxAirVelocity = transform.TransformDirection(new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer));
             IsControllingAir = false;
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -199,7 +208,7 @@ public class PlayerMovementOneScript : MonoBehaviour
 
             if (!CanDash)
             {
-                if (moveDirection.x <= MaxAirVelocity.x)
+                if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
                 {
                     if (horizontal != 0f)
                     {
@@ -211,10 +220,20 @@ public class PlayerMovementOneScript : MonoBehaviour
                     {
                         IsControllingAir = false;
                     }
+                    if (vertical != 0f)
+                    {
+                        moveDirection.z += InAirMove.z * InAirControl * Time.deltaTime;
+                        IsControllingAir = true;
+                        //moveDirection.z = InAirMove.z * (1f + Time.deltaTime * InAirControl);
+                    }
+                    else
+                    {
+                        IsControllingAir = false;
+                    }
 
                 }
-                
-                if (moveDirection.z <= MaxAirVelocity.z)
+                /*
+                if (Mathf.Abs(moveDirection.z) <= MaxAirVelocity.z)
                 {
                     if (vertical != 0f)
                     {
@@ -227,7 +246,8 @@ public class PlayerMovementOneScript : MonoBehaviour
                         IsControllingAir = false;
                     }
                 }
-                
+                */
+
             }
             else
             {
