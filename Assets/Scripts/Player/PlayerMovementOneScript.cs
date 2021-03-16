@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,7 +53,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     public bool CanDash;
 
     [Header("Multiplyiers")]
-    public float InAirMulti;
+    public float DashSpeed;
     public float SlideMulti;
     [Header("Drag")]
     public float InAirDrag;
@@ -65,7 +66,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float DirectionNormalMagnitude;
     public float InAirMoveMagnitude;
     public float MaxAirVelocityMagnitude;
-
+   
+   
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -75,10 +77,16 @@ public class PlayerMovementOneScript : MonoBehaviour
     }
     private void Update()
     {
+        //DEBUG
+        //========================================================================================================================================================
         MoveDirectionMagnitude = moveDirection.magnitude;
         DirectionNormalMagnitude = directionNormal.magnitude;
         InAirMoveMagnitude = InAirMove.magnitude;
         MaxAirVelocityMagnitude = MaxAirVelocity.magnitude;
+        //========================================================================================================================================================
+        
+        //INPUT and CHECKS
+        //========================================================================================================================================================
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
@@ -86,10 +94,8 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             IsSprinting = !IsSprinting;
         }
-       
         if (IsGrounded)
         {
-           // MaxAirVelocity = new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer);
             MaxAirVelocity = transform.TransformDirection(new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer));
             IsControllingAir = false;
             if (Input.GetKeyDown(KeyCode.Space))
@@ -105,21 +111,20 @@ public class PlayerMovementOneScript : MonoBehaviour
                 else
                 {
                     state = State.Moving;
-                }
-               
-                
+                }            
             }
             else
             {
                 state = State.Idle;
             }
-
         }
         else
         {
             state = State.InAir;
         }
-        //GRAVITY
+        //======================================================================================================================================================
+        
+        //GRAVITY PHYSICS
         //=============================================================================
         if (IsGrounded && _playerVelocity.y < 0)
         {
@@ -147,7 +152,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
-            //CanDash = true;
+            CanDash = true;
             IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
@@ -172,7 +177,6 @@ public class PlayerMovementOneScript : MonoBehaviour
             moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
             if (CurrentSpeed < MidBaseSpeed)
             {
-                //add speed untill max is reaches
                 CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
             }
             else if (CurrentSpeed > MidBaseSpeed)
@@ -205,8 +209,6 @@ public class PlayerMovementOneScript : MonoBehaviour
         while (state == State.InAir)
         {
             InAirMove = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
-            
-
             if (!CanDash)
             {
                 if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))
@@ -216,25 +218,13 @@ public class PlayerMovementOneScript : MonoBehaviour
                         moveDirection += InAirMove * InAirControl * Time.deltaTime;
                         IsControllingAir = true;
                     }
-                    else
-                    {
-                        IsControllingAir = false;
-                    }
-
-                }
-                else
-                {
-                    
-                    // Debug.LogError("BRUH");
                 }
             }
             else
             {
-                //dash
-                //CanDash = false;
-                // the other half is in idle state
+               
             }
-            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  //maybe put this ^ here? nahhhhhhhhhh
+            characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);  
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
         }
@@ -249,4 +239,6 @@ public class PlayerMovementOneScript : MonoBehaviour
         NextState();
     }
     #endregion
+    
+    
 }

@@ -522,7 +522,7 @@ MonoBehaviour:
   groundDistance: 0.4
   Gravity: 20
   CanDash: 0
-  InAirMulti: 1.5
+  DashSpeed: 1
   SlideMulti: 0
   InAirDrag: 1
   TotalVelocity: 0
