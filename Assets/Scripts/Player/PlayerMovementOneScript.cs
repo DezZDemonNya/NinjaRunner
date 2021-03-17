@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public enum State
 {
@@ -78,13 +80,73 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float TotalVelocity;
     [Tooltip("just gotta time the TotalVelocity by 3.6f and its in Kilometers an hour")]
     public float KPH;
-   
-   
-   
+    public Text SpeedInator;
+
+    [Header("WallRunning")]
+    public float WallDetectionDistance = 0.9f;
+    public float WallSpeedMulti = 1.5f;
+    public float CameraRollLimit = 20f;
+    [Tooltip("the normalised angle the wall needs to be at to wall run on, Default = 0.1f (85 degrees)")]
+    [Range(0.0f, 1.0f)]
+    public float NormalizedAngleThreshhold = 0.1f;
+    public float JumpDuration = 0.25f;
+    public float WallBouncing = 12f;
+    public float cameraTransitionDuration = 0.7f;
+    private bool _isWallRunning = false;
+    private Vector3 _lastWallPosition;
+    private Vector3 _lastWallNormal;
+    private float _timeSinceJump = 0;
+    private float _timeSinceWallStart = 0;
+    private float _timeSinceWallDepart = 0;
+    private Vector3[] wallDetectionRays;
+    private RaycastHit[] wallDetectionRayHits;
+    public Transform cam;
+    private float CalculateSide()
+    {
+        if (_isWallRunning)
+        {
+            Vector3 heading = _lastWallPosition - transform.position;
+            Vector3 perp = Vector3.Cross(transform.forward, heading);
+            float dir = Vector3.Dot(perp, transform.up);
+            return dir;
+        }
+        return 0;
+    }
+    public float GetCameraRoll()
+    {
+        float dir = CalculateSide();
+        float cameraAngle = cam.transform.eulerAngles.z;
+        float targetAngle = 0;
+        if (dir != 0)
+        {
+            targetAngle = Mathf.Sign(dir) * CameraRollLimit;
+        }
+        return Mathf.LerpAngle(cameraAngle, targetAngle, Mathf.Max(_timeSinceWallStart, _timeSinceWallDepart) / cameraTransitionDuration);
+    }
+    public Vector3 WallJumpDirection()
+    {
+        if (_isWallRunning)
+        {
+            return _lastWallNormal * WallBouncing;// + Vector3.up;
+        }
+        return Vector3.zero;
+    }
+    
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
         IsGrounded = false;
+        wallDetectionRays = new Vector3[]
+        {
+          Vector3.right,
+          Vector3.right + Vector3.forward,
+          //Vector3.forward,
+          Vector3.left + Vector3.forward,
+          Vector3.left,
+          //Vector3.back,
+          Vector3.left + Vector3.back,
+          Vector3.right + Vector3.back
+        };
         state = State.Idle; //make sure this is run AFTER the variables being set
         NextState();
     }
@@ -99,13 +161,22 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             IsSprinting = !IsSprinting;
         }
-        if (IsGrounded)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            MaxAirVelocity = transform.TransformDirection(new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer));
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (IsGrounded)
             {
                 _playerVelocity.y = JumpHeight;
             }
+            else if (_isWallRunning)
+            {
+                moveDirection += WallJumpDirection();
+            }
+            
+        }
+        if (IsGrounded)
+        {
+            MaxAirVelocity = transform.TransformDirection(new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer));
+            
             if (directionNormal.magnitude >= 0.01f)
             {
                 if (directionNormal.z > 0.5f && IsSprinting)
@@ -121,6 +192,11 @@ public class PlayerMovementOneScript : MonoBehaviour
             {
                 state = State.Idle;
             }
+        }
+        else if (_isWallRunning)
+        {
+            Debug.LogError("CanAttach");
+            state = State.WallRunning;
         }
         else
         {
@@ -139,6 +215,13 @@ public class PlayerMovementOneScript : MonoBehaviour
         //============================================================================
         
         TotalVelocity = characterController.velocity.magnitude;
+    }
+    private void LateUpdate()
+    {
+        TotalVelocity = characterController.velocity.magnitude;
+        KPH = TotalVelocity * 3.6f;
+        KPH = Mathf.Round(KPH * 10.0f) * 0.1f;
+        SpeedInator.text = "KM/H " + KPH;
     }
     private void FixedUpdate()
     {
@@ -182,10 +265,11 @@ public class PlayerMovementOneScript : MonoBehaviour
             {
                 CurrentSpeed = CurrentSpeed * (1f + Time.deltaTime * Acceleration);
             }
-            else if (CurrentSpeed > MidBaseSpeed)
-            {
-                CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
-            }
+            //idk why I put this if else here but im too affaid to remove it comepletly 
+            //else if (CurrentSpeed > MidBaseSpeed)
+           // {
+               // CurrentSpeed = CurrentSpeed * (1f - Time.deltaTime * Deceleration);
+           // }
             characterController.Move(moveDirection * CurrentSpeed * Time.deltaTime);
             TotalVelocity = characterController.velocity.magnitude;
             yield return null;
@@ -238,6 +322,23 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.WallRunning)
         {
+            _isWallRunning = false;
+            Gravity = WallGravity;
+            wallDetectionRayHits = new RaycastHit[wallDetectionRays.Length];
+            for (int i = 0; i < wallDetectionRays.Length; i++)
+            {
+                Vector3 dir = transform.TransformDirection(wallDetectionRays[i]);
+                Physics.Raycast(transform.position, dir, out wallDetectionRayHits[i], WallDetectionDistance, WallMask);
+
+            }
+            if (!IsGrounded)
+            {
+                wallDetectionRayHits = wallDetectionRayHits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
+            }
+            else
+            {
+
+            }
             yield return null;
         }
         NextState();
