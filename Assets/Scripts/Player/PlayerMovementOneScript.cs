@@ -85,6 +85,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     [Header("WallRunning")]
     public float WallDetectionDistance = 0.9f;
     public float WallSpeedMulti = 1.5f;
+    public float MinimumHeight = 1.2f;
     public float CameraRollLimit = 20f;
     [Tooltip("the normalised angle the wall needs to be at to wall run on, Default = 0.1f (85 degrees)")]
     [Range(0.0f, 1.0f)]
@@ -101,6 +102,14 @@ public class PlayerMovementOneScript : MonoBehaviour
     private Vector3[] wallDetectionRays;
     private RaycastHit[] wallDetectionRayHits;
     public Transform cam;
+    private bool VerticalCheck()
+    {
+        return !Physics.Raycast(transform.position, Vector3.down, MinimumHeight);
+    }
+    private bool CanWallRun()
+    {
+        return !IsGrounded && VerticalCheck();
+    }
     private float CalculateSide()
     {
         if (_isWallRunning)
@@ -193,7 +202,7 @@ public class PlayerMovementOneScript : MonoBehaviour
                 state = State.Idle;
             }
         }
-        else if (_isWallRunning)
+        else if (wallDetectionRayHits.Length > 0)
         {
             Debug.LogError("CanAttach");
             state = State.WallRunning;
@@ -226,6 +235,16 @@ public class PlayerMovementOneScript : MonoBehaviour
     private void FixedUpdate()
     {
         IsGrounded = Physics.CheckSphere(GroundCheck.position, groundDistance, GroundMask);
+    }
+    void OnWall(RaycastHit hit)
+    {
+        float d = Vector3.Dot(hit.normal, Vector3.up);
+        if (d >= -NormalizedAngleThreshhold && d <= NormalizedAngleThreshhold)
+        {
+            Vector3 alongWall = transform.TransformDirection(directionNormal);
+            characterController.Move(alongWall * CurrentSpeed * WallSpeedMulti * Time.deltaTime);
+            _isWallRunning = true;
+        }
     }
     #region States
     State state;
@@ -334,10 +353,12 @@ public class PlayerMovementOneScript : MonoBehaviour
             if (!IsGrounded)
             {
                 wallDetectionRayHits = wallDetectionRayHits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
-            }
-            else
-            {
-
+                if (wallDetectionRayHits.Length > 0)
+                {
+                    OnWall(wallDetectionRayHits[0]);
+                    _lastWallPosition = wallDetectionRayHits[0].point;
+                    _lastWallNormal = wallDetectionRayHits[0].normal;
+                }
             }
             yield return null;
         }
