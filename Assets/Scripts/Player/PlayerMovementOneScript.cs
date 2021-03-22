@@ -106,6 +106,26 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float cameraTransitionDuration = 0.7f;
     [Tooltip("velocity the player leaves the wall, default = 12f")]
     public float WallBouncing = 12f;
+    [Tooltip("this is mostly used to see if the player can attach to a wall")]
+    private bool _jumping;
+    private float _timeSinceJump = 0;
+    [Tooltip("When the player jumps off the wall the controller wants to get back on another wall as soon as possilble, this timer makes it so the player doesnt get back on the same wall, default = 0.25f")]
+    public float JumpDuration = 0.25f;
+    public bool CanAttach()
+    {
+        if (_jumping)
+        {
+            _timeSinceJump += Time.deltaTime;
+            if (_timeSinceJump > JumpDuration)
+            {
+                _timeSinceJump = 0;
+                _jumping = false;
+
+            }
+            return false;
+        }
+        return true;
+    }
     private float CalculateSide()
     {
         if (_isWallRunning)
@@ -162,14 +182,13 @@ public class PlayerMovementOneScript : MonoBehaviour
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
 
-        
-
         _hits = new RaycastHit[_WallDirections.Length];
         for (int i = 0; i < _WallDirections.Length; i++)
         {
             Vector3 dir = transform.TransformDirection(_WallDirections[i]);
             Physics.Raycast(transform.position, dir, out _hits[i], WallMaxDistance, WallMask);
         }
+
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             IsSprinting = !IsSprinting;
@@ -182,7 +201,8 @@ public class PlayerMovementOneScript : MonoBehaviour
             }
             else if (state == State.WallRunning)
             {
-                _playerVelocity += WallJumpDirection();
+                _jumping = true;
+                moveDirection += WallJumpDirection();
                 _playerVelocity.y = JumpHeight;
             }
         }
@@ -209,14 +229,17 @@ public class PlayerMovementOneScript : MonoBehaviour
         }
         else
         {
-            _isWallRunning = false;
-            _hits = _hits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
-            if (_hits.Length > 0) //if 
+            if (CanAttach())
             {
-                state = State.WallRunning;
-                _lastWallPosition = _hits[0].point;
-                _lastWallNormal = _hits[0].normal;
-            }
+                _isWallRunning = false;
+                _hits = _hits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
+                if (_hits.Length > 0) //if 
+                {
+                    state = State.WallRunning;
+                    _lastWallPosition = _hits[0].point;
+                    _lastWallNormal = _hits[0].normal;
+                }
+            }            
             else
             {
                 _isWallRunning = false;
@@ -254,6 +277,7 @@ public class PlayerMovementOneScript : MonoBehaviour
             _timeSinceWallStart = 0;
             _timeSinceWallDepart += Time.deltaTime;
         }
+
     }
     private void FixedUpdate()
     {
@@ -334,7 +358,11 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             _isWallRunning = false;
             Gravity = 25f;
-            InAirMove = transform.TransformDirection(new Vector3(directionNormal.x * InAirControl, 0f, directionNormal.z * InAirControl));
+            if (_timeSinceJump > JumpDuration)
+            {
+                InAirMove = transform.TransformDirection(new Vector3(directionNormal.x * InAirControl, 0f, directionNormal.z * InAirControl));
+            }
+            
             if (directionNormal.magnitude != 0f)
             {
                 if (Mathf.Abs(moveDirection.magnitude) <= Mathf.Abs(MaxAirVelocity.magnitude))

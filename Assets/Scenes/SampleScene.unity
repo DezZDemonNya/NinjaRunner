@@ -529,7 +529,8 @@ MonoBehaviour:
   WallSpeedMultiplier: 1.5
   MaxAngleRoll: 20
   cameraTransitionDuration: 0.7
-  WallBouncing: 5
+  WallBouncing: 2
+  JumpDuration: 0.25
 --- !u!1 &160948464
 GameObject:
   m_ObjectHideFlags: 0
