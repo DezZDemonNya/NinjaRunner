@@ -104,6 +104,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     public float MaxAngleRoll = 20;
     [Tooltip("How fast the camera turns on the Z-Axes, default = 0.7f")]
     public float cameraTransitionDuration = 0.7f;
+    [Tooltip("velocity the player leaves the wall, default = 12f")]
+    public float WallBouncing = 12f;
     private float CalculateSide()
     {
         if (_isWallRunning)
@@ -125,6 +127,14 @@ public class PlayerMovementOneScript : MonoBehaviour
             targetAngle = Mathf.Sign(dir) * MaxAngleRoll;
         }
         return Mathf.LerpAngle(cameraAngle, targetAngle, Mathf.Max(_timeSinceWallStart, _timeSinceWallDepart) / cameraTransitionDuration);
+    }
+    public Vector3 WallJumpDirection()
+    {
+        if (_isWallRunning)
+        {
+            return _lastWallNormal * WallBouncing;// + Vector3.up;
+        }
+        return Vector3.zero;
     }
     private void Start()
     {
@@ -168,6 +178,11 @@ public class PlayerMovementOneScript : MonoBehaviour
         {
             if (IsGrounded)
             {
+                _playerVelocity.y = JumpHeight;
+            }
+            else if (state == State.WallRunning)
+            {
+                _playerVelocity += WallJumpDirection();
                 _playerVelocity.y = JumpHeight;
             }
         }
@@ -354,12 +369,12 @@ public class PlayerMovementOneScript : MonoBehaviour
             float d = Vector3.Dot(hit.normal, Vector3.up);
             if (d >= -NormalizedAngleThreshhold && d <= NormalizedAngleThreshhold)
             {
-                Vector3 alongWall = transform.TransformDirection(_direction);
+                moveDirection = transform.TransformDirection(_direction);
 
-                Debug.DrawRay(transform.position, alongWall.normalized * 10, Color.green);
+                Debug.DrawRay(transform.position, moveDirection.normalized * 10, Color.green);
                 Debug.DrawRay(transform.position, _lastWallNormal * 10, Color.magenta);
 
-                characterController.Move(alongWall * CurrentSpeed * WallSpeedMultiplier * Time.deltaTime);
+                characterController.Move(moveDirection * CurrentSpeed * WallSpeedMultiplier * Time.deltaTime);
                 _isWallRunning = true;
             }
             yield return null;
