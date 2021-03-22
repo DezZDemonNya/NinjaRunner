@@ -83,33 +83,27 @@ public class PlayerMovementOneScript : MonoBehaviour
     public Text SpeedInator;
 
     [Header("WallRunning")]
-    public float WallDetectionDistance = 0.9f;
-    public float WallSpeedMulti = 1.5f;
-    public float MinimumHeight = 1.2f;
-    public float CameraRollLimit = 20f;
+    [Tooltip("How long the raycasts are for detecting the wall, Default = 0.9f")]
+    public float WallMaxDistance = 0.9f;
+    [Tooltip("Raycasts check surrounding for wall")]
+    private Vector3[] _WallDirections;
+    [Tooltip("data for wallDirections")]
+    private RaycastHit[] _hits;  //data for directions
+    public Transform cam;
+    private float _timeSinceWallDepart = 0f;
+    private float _timeSinceWallStart = 0f;
+    private bool _isWallRunning;
+    private Vector3 _lastWallPosition;
+    private Vector3 _lastWallNormal;
     [Tooltip("the normalised angle the wall needs to be at to wall run on, Default = 0.1f (85 degrees)")]
     [Range(0.0f, 1.0f)]
     public float NormalizedAngleThreshhold = 0.1f;
-    public float JumpDuration = 0.25f;
-    public float WallBouncing = 12f;
+    [Tooltip("To make wall running easier and feel fluid, it makes the total speed 50% faster while on a wall, default = 1.5f")]
+    public float WallSpeedMultiplier = 1.5f;
+    [Tooltip("The variable for how far the camera turns on the Z-Axes, default = 20")]
+    public float MaxAngleRoll = 20;
+    [Tooltip("How fast the camera turns on the Z-Axes, default = 0.7f")]
     public float cameraTransitionDuration = 0.7f;
-    private bool _isWallRunning = false;
-    private Vector3 _lastWallPosition;
-    private Vector3 _lastWallNormal;
-    private float _timeSinceJump = 0;
-    private float _timeSinceWallStart = 0;
-    private float _timeSinceWallDepart = 0;
-    private Vector3[] wallDetectionRays;
-    private RaycastHit[] wallDetectionRayHits;
-    public Transform cam;
-    private bool VerticalCheck()
-    {
-        return !Physics.Raycast(transform.position, Vector3.down, MinimumHeight);
-    }
-    private bool CanWallRun()
-    {
-        return !IsGrounded && VerticalCheck();
-    }
     private float CalculateSide()
     {
         if (_isWallRunning)
@@ -128,24 +122,15 @@ public class PlayerMovementOneScript : MonoBehaviour
         float targetAngle = 0;
         if (dir != 0)
         {
-            targetAngle = Mathf.Sign(dir) * CameraRollLimit;
+            targetAngle = Mathf.Sign(dir) * MaxAngleRoll;
         }
         return Mathf.LerpAngle(cameraAngle, targetAngle, Mathf.Max(_timeSinceWallStart, _timeSinceWallDepart) / cameraTransitionDuration);
     }
-    public Vector3 WallJumpDirection()
-    {
-        if (_isWallRunning)
-        {
-            return _lastWallNormal * WallBouncing;// + Vector3.up;
-        }
-        return Vector3.zero;
-    }
-    
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
         IsGrounded = false;
-        wallDetectionRays = new Vector3[]
+        _WallDirections = new Vector3[]
         {
           Vector3.right,
           Vector3.right + Vector3.forward,
@@ -166,6 +151,15 @@ public class PlayerMovementOneScript : MonoBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
         directionNormal = new Vector3(horizontal, 0f, vertical).normalized;
+
+        
+
+        _hits = new RaycastHit[_WallDirections.Length];
+        for (int i = 0; i < _WallDirections.Length; i++)
+        {
+            Vector3 dir = transform.TransformDirection(_WallDirections[i]);
+            Physics.Raycast(transform.position, dir, out _hits[i], WallMaxDistance, WallMask);
+        }
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             IsSprinting = !IsSprinting;
@@ -176,14 +170,10 @@ public class PlayerMovementOneScript : MonoBehaviour
             {
                 _playerVelocity.y = JumpHeight;
             }
-            else if (_isWallRunning)
-            {
-                moveDirection += WallJumpDirection();
-            }
-            
         }
         if (IsGrounded)
         {
+            //_isWallRunning = false;
             MaxAirVelocity = transform.TransformDirection(new Vector3(Mathf.Abs(moveDirection.x) + AirControllBuffer, 0f, Mathf.Abs(moveDirection.z) + AirControllBuffer));
             
             if (directionNormal.magnitude >= 0.01f)
@@ -202,17 +192,24 @@ public class PlayerMovementOneScript : MonoBehaviour
                 state = State.Idle;
             }
         }
-        else if (wallDetectionRayHits.Length > 0)
-        {
-            Debug.LogError("CanAttach");
-            state = State.WallRunning;
-        }
         else
         {
-            state = State.InAir;
+            _isWallRunning = false;
+            _hits = _hits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
+            if (_hits.Length > 0) //if 
+            {
+                state = State.WallRunning;
+                _lastWallPosition = _hits[0].point;
+                _lastWallNormal = _hits[0].normal;
+            }
+            else
+            {
+                _isWallRunning = false;
+                state = State.InAir;
+            }
+            
         }
         //======================================================================================================================================================
-        
         //GRAVITY PHYSICS
         //=============================================================================
         if (IsGrounded && _playerVelocity.y < 0)
@@ -224,6 +221,7 @@ public class PlayerMovementOneScript : MonoBehaviour
         //============================================================================
         
         TotalVelocity = characterController.velocity.magnitude;
+        
     }
     private void LateUpdate()
     {
@@ -231,20 +229,20 @@ public class PlayerMovementOneScript : MonoBehaviour
         KPH = TotalVelocity * 3.6f;
         KPH = Mathf.Round(KPH * 10.0f) * 0.1f;
         SpeedInator.text = "KM/H " + KPH;
+        if (_isWallRunning)
+        {
+            _timeSinceWallDepart = 0;
+            _timeSinceWallStart += Time.deltaTime;
+        }
+        else
+        {
+            _timeSinceWallStart = 0;
+            _timeSinceWallDepart += Time.deltaTime;
+        }
     }
     private void FixedUpdate()
     {
         IsGrounded = Physics.CheckSphere(GroundCheck.position, groundDistance, GroundMask);
-    }
-    void OnWall(RaycastHit hit)
-    {
-        float d = Vector3.Dot(hit.normal, Vector3.up);
-        if (d >= -NormalizedAngleThreshhold && d <= NormalizedAngleThreshhold)
-        {
-            Vector3 alongWall = transform.TransformDirection(directionNormal);
-            characterController.Move(alongWall * CurrentSpeed * WallSpeedMulti * Time.deltaTime);
-            _isWallRunning = true;
-        }
     }
     #region States
     State state;
@@ -258,6 +256,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Idle)
         {
+            _isWallRunning = false;
+            Gravity = 25f;
             IsSprinting = false;
             if (CurrentSpeed > MinBaseSpeed)
             {
@@ -278,6 +278,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Moving)
         {
+            _isWallRunning = false;
+            Gravity = 25f;
             IsSprinting = false;
             moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
             if (CurrentSpeed < MidBaseSpeed)
@@ -299,6 +301,7 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.Sprinting)
         {
+            Gravity = 25f;
             moveDirection = transform.TransformDirection(new Vector3(directionNormal.x, 0f, directionNormal.z));
             if (CurrentSpeed < MaxBaseSpeed)
             {
@@ -314,6 +317,8 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.InAir)
         {
+            _isWallRunning = false;
+            Gravity = 25f;
             InAirMove = transform.TransformDirection(new Vector3(directionNormal.x * InAirControl, 0f, directionNormal.z * InAirControl));
             if (directionNormal.magnitude != 0f)
             {
@@ -341,24 +346,21 @@ public class PlayerMovementOneScript : MonoBehaviour
     {
         while (state == State.WallRunning)
         {
-            _isWallRunning = false;
             Gravity = WallGravity;
-            wallDetectionRayHits = new RaycastHit[wallDetectionRays.Length];
-            for (int i = 0; i < wallDetectionRays.Length; i++)
+            RaycastHit hit = _hits[0];
+            float _horizontal = Input.GetAxis("Horizontal");
+            float _vertical = Input.GetAxis("Vertical");
+            Vector3 _direction = new Vector3(_horizontal, 0f, _vertical);
+            float d = Vector3.Dot(hit.normal, Vector3.up);
+            if (d >= -NormalizedAngleThreshhold && d <= NormalizedAngleThreshhold)
             {
-                Vector3 dir = transform.TransformDirection(wallDetectionRays[i]);
-                Physics.Raycast(transform.position, dir, out wallDetectionRayHits[i], WallDetectionDistance, WallMask);
+                Vector3 alongWall = transform.TransformDirection(_direction);
 
-            }
-            if (!IsGrounded)
-            {
-                wallDetectionRayHits = wallDetectionRayHits.ToList().Where(h => h.collider != null).OrderBy(h => h.distance).ToArray();
-                if (wallDetectionRayHits.Length > 0)
-                {
-                    OnWall(wallDetectionRayHits[0]);
-                    _lastWallPosition = wallDetectionRayHits[0].point;
-                    _lastWallNormal = wallDetectionRayHits[0].normal;
-                }
+                Debug.DrawRay(transform.position, alongWall.normalized * 10, Color.green);
+                Debug.DrawRay(transform.position, _lastWallNormal * 10, Color.magenta);
+
+                characterController.Move(alongWall * CurrentSpeed * WallSpeedMultiplier * Time.deltaTime);
+                _isWallRunning = true;
             }
             yield return null;
         }

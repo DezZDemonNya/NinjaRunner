@@ -523,6 +523,12 @@ MonoBehaviour:
   TotalVelocity: 0
   KPH: 0
   SpeedInator: {fileID: 503966783}
+  WallMaxDistance: 0.9
+  cam: {fileID: 963194228}
+  NormalizedAngleThreshhold: 0.1
+  WallSpeedMultiplier: 1.5
+  MaxAngleRoll: 20
+  cameraTransitionDuration: 70
 --- !u!1 &160948464
 GameObject:
   m_ObjectHideFlags: 0
